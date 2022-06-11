@@ -3,8 +3,7 @@ import sys
 if 'PyQt5' in sys.modules:
     from PyQt5.QtCore import (
         Qt, QSize, QPoint, QPointF, QRectF,
-        QEasingCurve, QPropertyAnimation, QSequentialAnimationGroup,
-        pyqtSlot, pyqtProperty)
+        QEasingCurve, QPropertyAnimation, QSequentialAnimationGroup, Q_ENUMS)
     from PyQt5.QtWidgets import QCheckBox
     from PyQt5.QtGui import QColor, QBrush, QPaintEvent, QPen, QPainter
 
@@ -20,9 +19,17 @@ else:
     from PySide2.QtGui import QColor, QBrush, QPaintEvent, QPen, QPainter
 
 
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+
+
+class HandleInvertedModeEnum:
+    straight = 0
+    inverted = 1
+
 
 class Toggle(QCheckBox):
-
+    Q_ENUMS(HandleInvertedModeEnum)
     _transparent_pen = QPen(Qt.transparent)
     _light_grey_pen = QPen(Qt.lightGray)
 
@@ -45,7 +52,11 @@ class Toggle(QCheckBox):
         # Setup the rest of the widget.
 
         self.setContentsMargins(8, 0, 8, 0)
-        self._handle_position = 0
+        self._start_position, self._end_position = 0, 1
+        self._handle_position = self._start_position
+        self._handle_inverted_mode = HandleInvertedModeEnum.straight
+
+
 
         self.stateChanged.connect(self.handle_state_change)
 
@@ -92,9 +103,21 @@ class Toggle(QCheckBox):
 
         p.end()
 
+    @Property(HandleInvertedModeEnum)
+    def inverted_mode(self):
+        return self._handle_inverted_mode
+
+    @inverted_mode.setter
+    def inverted_mode(self, value):
+        if self._handle_inverted_mode != value:
+            self._handle_inverted_mode = value
+            self._start_position, self._end_position = self._end_position, self._start_position
+            self.setProperty('handle_position', value)
+            self.update()
+
     @Slot(int)
     def handle_state_change(self, value):
-        self._handle_position = 1 if value else 0
+        self._handle_position = self._end_position if value else self._start_position
 
     @Property(float)
     def handle_position(self):
@@ -120,14 +143,12 @@ class Toggle(QCheckBox):
         self.update()
 
 
-
 class AnimatedToggle(Toggle):
 
     _transparent_pen = QPen(Qt.transparent)
     _light_grey_pen = QPen(Qt.lightGray)
 
-    def __init__(self, *args, pulse_unchecked_color="#44999999",
-        pulse_checked_color="#4400B0EE", **kwargs):
+    def __init__(self, *args, pulse_unchecked_color="#44999999", pulse_checked_color="#4400B0EE", **kwargs):
 
         self._pulse_radius = 0
 
@@ -155,9 +176,9 @@ class AnimatedToggle(Toggle):
     def handle_state_change(self, value):
         self.animations_group.stop()
         if value:
-            self.animation.setEndValue(1)
+            self.animation.setEndValue(self._end_position)
         else:
-            self.animation.setEndValue(0)
+            self.animation.setEndValue(self._start_position)
         self.animations_group.start()
 
     def paintEvent(self, e: QPaintEvent):
