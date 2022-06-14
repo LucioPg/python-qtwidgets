@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
-
+import os
 # from polygonwidget import PolygonWidget
 try:
     from .toggle import AnimatedToggle, Toggle
@@ -106,36 +106,10 @@ class  AnimatedTogglePlugin(QPyDesignerCustomWidgetPlugin):
     # plugin will be configured using this description.
     def domXml(self):
         return (
-            '<widget class="AnimatedToggle" name=\"AnimatedToggle\">\n'
+            '<widget class="AnimatedToggle" name=\"Animated toggle\">\n'
             "</widget>\n"
         )
-        # return (
-        #     '<widget class="Toggle" name=\"Toggle\">\n'
-        #     "</widget>\n"
-        # )
- #        return """<widget class="ToggleSwitch" name="toggleSwitchWidget">\n<property name="geometry">\n<rect>\n<x>170</x>\n
- #     <y>9</y>\n
- #     <width>60</width>\n
- #     <height>71</height>\n
- #    </rect>\n
- #   </property>\n
- #   <property name="minimumSize">\n
- #    <size>\n
- #     <width>60</width>\n
- #     <height>28</height>\n
- #    </size>\n
- #   </property>\n
- #   <property name="maximumSize">\n
- #    <size>\n
- #     <width>60</width>\n
- #     <height>16777215</height>\n
- #    </size>\n
- #   </property>\n
- #   <property name="style" stdset="0">\n
- #    <enum>ToggleSwitch::android</enum>\n
- #   </property>\n
- #  </widget>\n
- # </widget>"""
+
 
     # Returns the module containing the custom widget class. It may include
     # a module path.
@@ -143,5 +117,5 @@ class  AnimatedTogglePlugin(QPyDesignerCustomWidgetPlugin):
         return "toggle"
 
 
-icon_path = r'C:\Users\Lucio\PycharmProjects\game1\pyqt5-custom-widgets\pyqt5Custom\icons\switchicon.png'
+icon_path = os.path.join(os.path.dirname(__file__),'icon','switchicon.png')
 
