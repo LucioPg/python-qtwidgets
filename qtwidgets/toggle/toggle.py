@@ -18,8 +18,8 @@ else:
     from PySide2.QtWidgets import QCheckBox
     from PySide2.QtGui import QColor, QBrush, QPaintEvent, QPen, QPainter
 
-
 import pydevd_pycharm
+
 pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
 
@@ -34,22 +34,19 @@ class Toggle(QCheckBox):
     _light_grey_pen = QPen(Qt.lightGray)
 
     def __init__(self,
-        parent=None,
-        bar_color=Qt.gray,
-        checked_color="#00B0FF",
-        handle_color=Qt.white,
-        ):
+                 parent=None
+                 ):
         super().__init__(parent)
+        self._pulse_radius = 0
 
-        # Save our properties on the object via self, so we can access them later
-        # in the paintEvent.
-        self._bar_brush = QBrush(bar_color)
-        self._bar_checked_brush = QBrush(QColor(checked_color).lighter())
+        self._handle_color = self._handle_color_default = QColor('white')
+        self._checked_color = self._checked_color_default = QColor("#00B0FF")
+        self._bar_color = self._bar_color_default = QColor('gray')
+        self._bar_brush = QBrush(self._bar_color)
+        self._bar_checked_brush = QBrush(QColor(self._checked_color).lighter())
+        self._handle_brush = QBrush(self._handle_color)
+        self._handle_checked_brush = QBrush(QColor(self._checked_color))
 
-        self._handle_brush = QBrush(handle_color)
-        self._handle_checked_brush = QBrush(QColor(checked_color))
-
-        # Setup the rest of the widget.
         self._handle_size_factor = self._handle_size_factor_default = 24
         self.handle_size = self._handle_size_factor / 100
         self.setContentsMargins(8, 0, 8, 0)
@@ -57,9 +54,63 @@ class Toggle(QCheckBox):
         self._handle_position = self._start_position
         self._handle_inverted_mode = HandleInvertedModeEnum.straight
 
-
-
         self.stateChanged.connect(self.handle_state_change)
+
+    def reset_checked_color(self):
+        self.set_checked_color(self._checked_color_default)
+        return self._checked_color_default
+
+    def get_checked_color(self):
+        return self._checked_color
+
+    @Slot(QColor)
+    def set_checked_color(self, color):
+        self._checked_color = color
+        lightness_factor_color = color.lightness()
+        if lightness_factor_color * 1.5 >= 200:
+            lightness_factor_color = 90
+        else:
+            lightness_factor_color = 150
+        self._bar_checked_brush = self._create_brush(color.lighter(factor=lightness_factor_color)) # note: its necessary redeclare as QColor in order to make it lighter
+        self._handle_checked_brush = self._create_brush( color)
+        self.update()
+
+    checked_color = Property(QColor, fset=set_checked_color, fget=get_checked_color, freset=reset_checked_color)
+
+
+    def reset_bar_color(self):
+        self.set_bar_color(self._bar_color_default)
+        return self._bar_color_default
+
+    def get_bar_color(self):
+        return self._bar_color
+
+    @Slot(QColor)
+    def set_bar_color(self, color):
+        self._bar_color = color
+        self._bar_brush = self._create_brush( color)
+        self.update()
+
+    bar_color = Property(QColor, fset=set_bar_color, fget=get_bar_color, freset=reset_bar_color)
+
+
+    def reset_handle_color(self):
+        self.set_handle_color(self._handle_color_default)
+        return self._handle_color_default
+
+    def get_handle_color(self):
+        return self._handle_color
+
+    @Slot(QColor)
+    def set_handle_color(self, color):
+        self._handle_color = color
+        self._handle_brush = self._create_brush( color)
+        self.update()
+
+    handle_color = Property(QColor, fset=set_handle_color, fget=get_handle_color, freset=reset_handle_color)
+
+    def _create_brush(self, color):
+        return QBrush(color)
 
     def sizeHint(self):
         return QSize(58, 45)
@@ -151,8 +202,8 @@ class Toggle(QCheckBox):
     def reset_handle_size_factor(self):
         self.set_handle_size_factor(self._handle_size_factor_default)
 
-    handle_size_factor = Property(int,fset=set_handle_size_factor, fget=get_handle_size_factor, freset=reset_handle_size_factor)
-
+    handle_size_factor = Property(int, fset=set_handle_size_factor, fget=get_handle_size_factor,
+                                  freset=reset_handle_size_factor)
 
     @Property(float, designable=False)
     def pulse_radius(self):
@@ -165,7 +216,6 @@ class Toggle(QCheckBox):
 
 
 class AnimatedToggle(Toggle):
-
     _transparent_pen = QPen(Qt.transparent)
     _light_grey_pen = QPen(Qt.lightGray)
 
@@ -190,8 +240,6 @@ class AnimatedToggle(Toggle):
 
         self._pulse_unchecked_animation = QBrush(QColor(pulse_unchecked_color))
         self._pulse_checked_animation = QBrush(QColor(pulse_checked_color))
-
-
 
     @Slot(int)
     def handle_state_change(self, value):
