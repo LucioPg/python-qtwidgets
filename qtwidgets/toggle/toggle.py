@@ -19,8 +19,8 @@ else:
     from PySide2.QtGui import QColor, QBrush, QPaintEvent, QPen, QPainter
 
 
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+import pydevd_pycharm
+pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
 
 class HandleInvertedModeEnum:
@@ -50,7 +50,8 @@ class Toggle(QCheckBox):
         self._handle_checked_brush = QBrush(QColor(checked_color))
 
         # Setup the rest of the widget.
-
+        self._handle_size_factor = self._handle_size_factor_default = 24
+        self.handle_size = self._handle_size_factor / 100
         self.setContentsMargins(8, 0, 8, 0)
         self._start_position, self._end_position = 0, 1
         self._handle_position = self._start_position
@@ -69,7 +70,7 @@ class Toggle(QCheckBox):
     def paintEvent(self, e: QPaintEvent):
 
         contRect = self.contentsRect()
-        handleRadius = round(0.24 * contRect.height())
+        handleRadius = round(self._handle_size_factor * contRect.height())
 
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -119,7 +120,7 @@ class Toggle(QCheckBox):
     def handle_state_change(self, value):
         self._handle_position = self._end_position if value else self._start_position
 
-    @Property(float)
+    @Property(float, designable=False)
     def handle_position(self):
         return self._handle_position
 
@@ -133,7 +134,27 @@ class Toggle(QCheckBox):
         self._handle_position = pos
         self.update()
 
-    @Property(float)
+    def get_handle_size_factor(self):
+        return self._handle_size_factor
+
+    @Slot(int)
+    def set_handle_size_factor(self, factor):
+        """change the property
+        we need to trigger QWidget.update() method, either by:
+            1- calling it here [ what we're doing ].
+            2- connecting the QPropertyAnimation.valueChanged() signal to it.
+        """
+        self._handle_size_factor = factor
+        self.handle_size = factor / 100
+        self.update()
+
+    def reset_handle_size_factor(self):
+        self.set_handle_size_factor(self._handle_size_factor_default)
+
+    handle_size_factor = Property(int,fset=set_handle_size_factor, fget=get_handle_size_factor, freset=reset_handle_size_factor)
+
+
+    @Property(float, designable=False)
     def pulse_radius(self):
         return self._pulse_radius
 
@@ -184,7 +205,7 @@ class AnimatedToggle(Toggle):
     def paintEvent(self, e: QPaintEvent):
 
         contRect = self.contentsRect()
-        handleRadius = round(0.24 * contRect.height())
+        handleRadius = round(self.handle_size * contRect.height())
 
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
