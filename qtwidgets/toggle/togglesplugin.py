@@ -106,7 +106,7 @@ class  AnimatedTogglePlugin(QPyDesignerCustomWidgetPlugin):
     # plugin will be configured using this description.
     def domXml(self):
         return (
-            '<widget class="AnimatedToggle" name=\"Animated toggle\">\n'
+            '<widget class="AnimatedToggle" name=\"Animated_toggle\">\n'
             "</widget>\n"
         )
 
@@ -114,7 +114,7 @@ class  AnimatedTogglePlugin(QPyDesignerCustomWidgetPlugin):
     # Returns the module containing the custom widget class. It may include
     # a module path.
     def includeFile(self):
-        return "toggle"
+        return "qtwidgets.toggle"
 
 
 icon_path = os.path.join(os.path.dirname(__file__),'icon','switchicon.png')
