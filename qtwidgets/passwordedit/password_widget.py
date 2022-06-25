@@ -1,16 +1,20 @@
 import sys
+import os
 if 'PyQt5' in sys.modules:
     from PyQt5 import QtCore, QtGui, QtWidgets
     from PyQt5.QtCore import Qt
     from PyQt5.QtCore import pyqtSignal as Signal
-    from . import resources_pyqt5
+    # from . import resources_pyqt5
 
 else:
     from PySide2 import QtCore, QtGui, QtWidgets
     from PySide2.QtCore import Qt
     from PySide2.QtCore import Signal
-    from . import resources_pyside2
+    # from . import resources_pyside2
 
+import pydevd_pycharm
+
+pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
 class PasswordEdit(QtWidgets.QLineEdit):
     """
@@ -18,11 +22,12 @@ class PasswordEdit(QtWidgets.QLineEdit):
     Based on this example https://kushaldas.in/posts/creating-password-input-widget-in-pyqt.html by Kushal Das.
     """
 
-    def __init__(self, show_visibility=True, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.visibleIcon = QtGui.QIcon(":/icons/eye.svg")
-        self.hiddenIcon = QtGui.QIcon(":/icons/hidden.svg")
+    def __init__(self, parent=None, show_visibility=True, *args, **kwargs):
+        super().__init__(*args,parent=parent, **kwargs)
+        visible_icon_path = os.path.join(os.path.dirname(__file__),'icons','eye.svg')
+        hidden_icon_path = os.path.join(os.path.dirname(__file__),'icons','hidden.svg')
+        self.visibleIcon = QtGui.QIcon(visible_icon_path)
+        self.hiddenIcon = QtGui.QIcon(hidden_icon_path)
 
         self.setEchoMode(QtWidgets.QLineEdit.Password)
         

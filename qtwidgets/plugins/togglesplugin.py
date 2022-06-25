@@ -28,10 +28,10 @@ from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 import os
 # from polygonwidget import PolygonWidget
 try:
-    from .toggle import AnimatedToggle, Toggle
+    from qtwidgets.toggle.toggle import AnimatedToggle, Toggle
     # from .toggle import AnimatedToggle, Toggle
 except ModuleNotFoundError or ImportError:
-    from toggle import AnimatedToggle, Toggle
+    from qtwidgets.toggle.toggle import AnimatedToggle, Toggle
     # from toggle import  Toggle
 
 class  AnimatedTogglePlugin(QPyDesignerCustomWidgetPlugin):
@@ -117,5 +117,6 @@ class  AnimatedTogglePlugin(QPyDesignerCustomWidgetPlugin):
         return "qtwidgets.toggle"
 
 
-icon_path = os.path.join(os.path.dirname(__file__),'icon','switchicon.png')
+# icon_path = os.path.join(os.path.dirname(__file__), '../toggle/icon', 'switchicon.png')
+icon_path = os.path.join(os.path.dirname((os.path.dirname(__file__))),'toggle','icons', 'switchicon.png')
 

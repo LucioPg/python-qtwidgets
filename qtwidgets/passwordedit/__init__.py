@@ -1,1 +1,4 @@
-from .password import PasswordEdit
+try:
+    from .password_widget import PasswordEdit
+except ModuleNotFoundError:
+    from password_widget import PasswordEdit
