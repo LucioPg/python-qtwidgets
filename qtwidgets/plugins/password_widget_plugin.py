@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-import pydevd_pycharm
-
-pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+# import pydevd_pycharm
+#
+# pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
@@ -9,10 +9,9 @@ import os
 
 try:
     from qtwidgets.passwordedit.password_widget import PasswordEdit
-    # from .toggle import AnimatedToggle, Toggle
 except ModuleNotFoundError or ImportError:
     from qtwidgets.passwordedit import PasswordEdit
-    # from toggle import  Toggle
+
 
 class  PasswordWidgetPlugin(QPyDesignerCustomWidgetPlugin):
     """PasswordWidgetPlugin(QPyDesignerCustomWidgetPlugin)
@@ -97,5 +96,5 @@ class  PasswordWidgetPlugin(QPyDesignerCustomWidgetPlugin):
         return "qtwidgets.passwordedit"
 
 
-icon_path = os.path.join(os.path.dirname((os.path.dirname(__file__))),'passwordedit','icons', 'hidden.svg')
+icon_path = os.path.join(os.path.dirname((os.path.dirname(__file__))),'passwordedit','icons', 'hidden.png')
 
