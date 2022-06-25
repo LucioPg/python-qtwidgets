@@ -18,9 +18,9 @@ else:
     from PySide2.QtWidgets import QCheckBox
     from PySide2.QtGui import QColor, QBrush, QPaintEvent, QPen, QPainter
 
-import pydevd_pycharm
-
-pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+# import pydevd_pycharm
+#
+# pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
 
 class HandleInvertedModeEnum:
