@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.18.3'
+version = '0.18.2.4'
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -31,13 +31,16 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={'':extra_files},
+    install_requires=[
+        'PyQt5',
+        'pyqt5-tools'
+      ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Topic :: Desktop Environment',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Widget Sets',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4'
+        'Programming Language :: Python :: 3.9'
     ]
 )

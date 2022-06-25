@@ -11,3 +11,4 @@ from .palette import PaletteGrid, PaletteHorizontal, PaletteVertical
 # from scrubber
 # from stopwatch
 from .toggle import Toggle, AnimatedToggle
+from .utils import launch_designer

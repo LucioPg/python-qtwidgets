@@ -1,11 +1,11 @@
 import sys
-if 'PyQt5' in sys.modules:
-    from PyQt5 import QtCore, QtGui, QtWidgets
-    from PyQt5.QtCore import Qt, pyqtSignal as Signal
+# import pydevd_pycharm
+#
+# pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
-else:
-    from PySide2 import QtCore, QtGui, QtWidgets
-    from PySide2.QtCore import Qt, Signal
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt, pyqtSignal as Signal
+
 
 
 
