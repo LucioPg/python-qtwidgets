@@ -46,7 +46,7 @@ class Toggle(QCheckBox):
         self._bar_checked_brush = QBrush(QColor(self._checked_color).lighter())
         self._handle_brush = QBrush(self._handle_color)
         self._handle_checked_brush = QBrush(QColor(self._checked_color))
-
+        self._handle_checked_repaint = False
         self._handle_size_factor = self._handle_size_factor_default = 24
         self.handle_size = self._handle_size_factor / 100
         self.setContentsMargins(8, 0, 8, 0)
@@ -141,7 +141,7 @@ class Toggle(QCheckBox):
         if self.isChecked():
             p.setBrush(self._bar_checked_brush)
             p.drawRoundedRect(barRect, rounding, rounding)
-            p.setBrush(self._handle_checked_brush)
+            p.setBrush(self._handle_checked_brush if self._handle_checked_repaint else self._handle_brush)
 
         else:
             p.setBrush(self._bar_brush)
@@ -154,6 +154,16 @@ class Toggle(QCheckBox):
             handleRadius, handleRadius)
 
         p.end()
+
+    @Property(bool)
+    def paint_checked_handle(self):
+        return self._handle_checked_repaint
+
+    @paint_checked_handle.setter
+    def paint_checked_handle(self, value):
+        if self._handle_checked_repaint != value:
+            self._handle_checked_repaint = value
+
 
     @Property(HandleInvertedModeEnum)
     def inverted_mode(self):
@@ -281,7 +291,7 @@ class AnimatedToggle(Toggle):
         if self.isChecked():
             p.setBrush(self._bar_checked_brush)
             p.drawRoundedRect(barRect, rounding, rounding)
-            p.setBrush(self._handle_checked_brush)
+            p.setBrush(self._handle_checked_brush if self._handle_checked_repaint else self._handle_brush)
 
         else:
             p.setBrush(self._bar_brush)
