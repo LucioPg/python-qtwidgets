@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from palette import Palette
+from qtwidgets.palette import PaletteHorizontal as Palette
 
 
 class Window(QtWidgets.QMainWindow):

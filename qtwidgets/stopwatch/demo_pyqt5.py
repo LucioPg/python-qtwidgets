@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from palette import Palette
+from qtwidgets.palette import PaletteHorizontal, PaletteVertical
 
 
 class Window(QtWidgets.QMainWindow):
@@ -7,7 +7,7 @@ class Window(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        palette = Palette('paired12')
+        palette = PaletteVertical('paired12')
         palette.selected.connect(self.show_selected_color)
         self.setCentralWidget(palette)
 
