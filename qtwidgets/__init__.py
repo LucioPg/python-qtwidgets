@@ -12,3 +12,4 @@ from .palette import PaletteGrid, PaletteHorizontal, PaletteVertical
 # from stopwatch
 from .toggle import Toggle, AnimatedToggle
 from .utils import launch_designer
+from .checkablecombobox import CheckableComboBox
