@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QComboBox, QMainWindow, QWidget, QVBoxLayout, QMenu, QListView, QTreeView
-from PyQt5.QtGui import QStandardItemModel, QMouseEvent, QStandardItem, QCloseEvent
+from PyQt5.QtGui import QStandardItemModel, QMouseEvent, QStandardItem, QCloseEvent, QHideEvent, QShowEvent
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, pyqtProperty
 import sys
 
@@ -23,9 +23,10 @@ class ComboListView(QListView):
     RIGHT = pyqtSignal(QPoint)
     DELETE = pyqtSignal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, combo = None):
         super(ComboListView, self).__init__(parent)
         self.RIGHT.connect(self.showMenu)
+        self.combo = combo
 
     def showMenu(self, pos):
         menu = QMenu()
@@ -36,10 +37,37 @@ class ComboListView(QListView):
         self.DELETE.emit(self.currentIndex().row())
 
     def mousePressEvent(self, event: QMouseEvent):
+
         if event.button() == Qt.LeftButton:
+            # item = self.model()
             super(ComboListView, self).mousePressEvent(event)
         elif event.button() == Qt.RightButton:
             self.RIGHT.emit(event.pos())
+        else:
+            print(event.type())
+
+    def mouseReleaseEvent(self, e: QMouseEvent) -> None:
+        return
+
+    def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
+        parent: CheckableComboBox_ABS = self.combo
+        if parent:
+            parent.remove_placeholders()
+            parent.insert_placeholder()
+        super(ComboListView, self).mouseDoubleClickEvent(e)
+        parent._changed = False
+
+    def showEvent(self, a0: QShowEvent) -> None:
+        parent: CheckableComboBox_ABS = self.combo
+        if parent:
+            parent.remove_placeholders()
+        super(ComboListView, self).showEvent(a0)
+
+    def hideEvent(self, a0: QHideEvent) -> None:
+        parent: CheckableComboBox_ABS = self.combo
+        if parent:
+            parent.insert_placeholder()
+        super(ComboListView, self).hideEvent(a0)
 
 
 
@@ -49,17 +77,17 @@ class CheckableComboBox_ABS(QComboBox):
     DELETE = pyqtSignal(int)
 
     def __init__(self, parent):
-        try:
-            import pydevd_pycharm
-
-            pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
-        except Exception as error:
-            print(f'Warning the debugger in not loaded:: {error}')
+        # try:
+        #     import pydevd_pycharm
+        #
+        #     pydevd_pycharm.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+        # except Exception as error:
+        #     print(f'Warning the debugger in not loaded:: {error}')
         super(CheckableComboBox_ABS, self).__init__(parent)
         # self.view().mousePressEvent.connect(self.handle_item_pressed)
         self.list_view = ComboListView
         self.placeholders_id_code = PlaceholderIdCode()
-        self.setView(self.list_view())
+        self.setView(self.list_view(combo=self))
         self.view().pressed.connect(self.handle_item_pressed)
         self.view().DELETE.connect(lambda x: self.DELETE.emit(x))
         self.setModel(QStandardItemModel(self))
@@ -70,7 +98,6 @@ class CheckableComboBox_ABS(QComboBox):
         self._selection_is_present = ''
         self._selection_is_not_present = ''
         self._no_columns = 'No colums'
-        self._placeholder_is_inserted = False
         self.map_cat_id = {}
 
 
@@ -105,13 +132,11 @@ class CheckableComboBox_ABS(QComboBox):
     def get_all_checked(self):
         return self.checkedItems
 
-    # def clear(self) -> None:
-    #     super(CheckableComboBox_ABS, self).clear()
-    #     self._placeholder_is_inserted = False
-    #     self.insert_placeholder()
+    def mouseDoubleClickEvent(self, a0: QMouseEvent) -> None:
+        pass
 
     def insert_placeholder(self):
-        if not self._placeholder_is_inserted:
+        if not self._placeholder_is_inserted():
             if not self.count():
                 placeholder = self._no_columns
             elif not self.checkedItems:
@@ -119,17 +144,27 @@ class CheckableComboBox_ABS(QComboBox):
             else:
                 placeholder = self._selection_is_present
             if placeholder is not None:
-                self.addItem(placeholder, self.placeholders_id_code)
-                self._placeholder_is_inserted = True
-            self.setCurrentIndex(self.count() - 1 if self.count() > 0 else 0)
+                super(CheckableComboBox_ABS, self).addItem(placeholder, self.placeholders_id_code)
+        placeholder_row = self.findData(self.placeholders_id_code)
+        self.setCurrentIndex(placeholder_row if placeholder_row != -1 else 0)
 
+
+    def get_placeholder(self) -> tuple:
+        row = self.findData(self.placeholders_id_code)
+        if row != -1:  # ritorna indice del primo rigo che trova
+            return self.itemText(row), row
+        else:
+            return None, None
+
+
+    def _placeholder_is_inserted(self):
+        return True if self.findData(self.placeholders_id_code) != -1 else False
 
     def remove_placeholders(self):
         row = self.findData(self.placeholders_id_code)
         while row != -1:  # ritorna indice del primo rigo che trova, se non trova -1 usare un while
             self.removeItem(row)
             row = self.findData(self.placeholders_id_code)
-        self._placeholder_is_inserted = False
 
     def hidePopup(self):
         if not self._changed:
@@ -141,7 +176,7 @@ class CheckableComboBox_ABS(QComboBox):
         self._changed = False
 
     def closeEvent(self, a0: QCloseEvent) -> None:
-        self._changed = True # porcaround per non far triggerare hidePopup
+        self._changed = True # porkaround per non far triggerare hidePopup
         a0.accept()
 
     def showPopup(self) -> None:
@@ -149,7 +184,9 @@ class CheckableComboBox_ABS(QComboBox):
         super(CheckableComboBox_ABS, self).showPopup()
         if not self.count():
             self.insert_placeholder()
-
+    def setCurrentIndex(self, index: int) -> None:
+        placeholder_row = self.findData(self.placeholders_id_code)
+        super(CheckableComboBox_ABS, self).setCurrentIndex(placeholder_row if placeholder_row != -1 else index)
 
     # when any item get pressed
     def handle_item_pressed(self, index):
@@ -163,7 +200,7 @@ class CheckableComboBox_ABS(QComboBox):
         self.check_items()
         if self.checkedItems and not state:
                 last_checked = self.checkedItems[-1]
-                self.setCurrentIndex(last_checked.index().row())
+                # self.setCurrentIndex(last_checked.index().row())
         self._changed = True
 
     def unselect_all(self):
@@ -171,7 +208,7 @@ class CheckableComboBox_ABS(QComboBox):
         for x in range(checked_items_num):
             item = self.checkedItems.pop()
             item.setCheckState(False)
-        self.remove_placeholders()
+        self.remove_placeholders() # TODO TENERE DOCCHIO
         self.insert_placeholder()
 
     def get_checked_items(self):
@@ -180,7 +217,8 @@ class CheckableComboBox_ABS(QComboBox):
     # method called by check_items
     def item_checked(self, index):
         item = self.model().item(index, 0)
-        if item.text() != self._selection_is_present and item.text() != self._selection_is_not_present:
+        item_data = self.findData(self.placeholders_id_code)
+        if item_data == -1:
             state = item.checkState()
             return state
         else:
@@ -220,8 +258,6 @@ class CheckableComboBox_ABS(QComboBox):
                 self.checkedItems.append(item)
             else:
                 item.setCheckState(False)
-        self.remove_placeholders()
-        self.insert_placeholder()
 
     # calling method
     def check_items(self):
@@ -234,11 +270,12 @@ class CheckableComboBox_ABS(QComboBox):
                 self.checkedItems.append(self.model().item(i, 0))
         return self.checkedItems
 
-    def addItem(self, text: str, data) -> None:
-        if self._placeholder_is_inserted and self.count() == 1: # nel caso iniziale in cui sono presettatti degli items
-            self.remove_placeholders()
-        return super(CheckableComboBox_ABS, self).addItem(text, data)
-
+    def addItem(self, text: str, data=None) -> None:
+        if data is None:
+            data = text
+        if self._placeholder_is_inserted: # nel caso iniziale in cui sono presettatti degli items
+            super(CheckableComboBox_ABS, self).addItem(text, data)
+            self.update_placeholder()
 
     def addItems(self, items_text, already_selected) -> None:
         self.clear()
@@ -259,9 +296,12 @@ class CheckableComboBox_ABS(QComboBox):
                     item.setCheckState(False)
                 else:
                     item.setCheckState(True)
+        self.update_placeholder()
+        self.check_items()
+
+    def update_placeholder(self):
         self.remove_placeholders()
         self.insert_placeholder()
-        self.check_items()
 
 class CheckableComboBox(CheckableComboBox_ABS):
     def __init__(self, parent=None):
@@ -270,11 +310,11 @@ class CheckableComboBox(CheckableComboBox_ABS):
         # self.customContextMenuRequested.connect(self.showMenu)
         self.selection_is_present = 'Visible Fields'
         self.selection_is_not_present = 'Selected Fields'
-        # test
-        items = [f'test {x} ' for x in range(9)]
-        already_selected = list(filter(lambda x: items.index(x) % 2 == 0, items))
-        self.addItems(items, already_selected)
-        # end test
+        #test
+        # items = [f'test {x} ' for x in range(9)]
+        # already_selected = list(filter(lambda x: items.index(x) % 2 == 0, items))
+        # self.addItems(items, already_selected)
+        #end test
 
 
 
