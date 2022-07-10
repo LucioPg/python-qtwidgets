@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QComboBox, QMainWindow, QWidget, QVBoxLayout, QMenu, QListView, QTreeView
 from PyQt5.QtGui import QStandardItemModel, QMouseEvent, QStandardItem, QCloseEvent, QHideEvent, QShowEvent
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint, pyqtProperty
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint, pyqtProperty, QTimer
 import sys
 
 class PlaceholderIdCode:
@@ -37,11 +37,14 @@ class ComboListView(QListView):
         return
 
     def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
+        # porkaround to avoid weird change of the index
+        super(ComboListView, self).mouseDoubleClickEvent(e)
+        QTimer.singleShot(100, self._update_parent_placeholder)
+
+    def _update_parent_placeholder(self):
         parent: CheckableComboBox_ABS = self.combo
         if parent:
-            parent.remove_placeholders()
-            parent.insert_placeholder()
-        super(ComboListView, self).mouseDoubleClickEvent(e)
+            parent.update_placeholder()
         parent._changed = False
 
     def showEvent(self, a0: QShowEvent) -> None:
