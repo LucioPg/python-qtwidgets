@@ -208,8 +208,6 @@ class CheckableComboBox_ABS(QComboBox):
         for x in range(checked_items_num):
             item = self.checkedItems.pop()
             item.setCheckState(False)
-        self.remove_placeholders() # TODO TENERE DOCCHIO
-        self.insert_placeholder()
 
     def get_checked_items(self):
         return self.check_items()
