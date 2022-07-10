@@ -3,19 +3,6 @@ from PyQt5.QtGui import QStandardItemModel, QMouseEvent, QStandardItem, QCloseEv
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, pyqtProperty
 import sys
 
-
-
-
-
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
-# class FieldDataCode(metaclass=Singleton):
 class PlaceholderIdCode:
     code = 12011983
 
@@ -89,16 +76,28 @@ class CheckableComboBox_ABS(QComboBox):
         self.placeholders_id_code = PlaceholderIdCode()
         self.setView(self.list_view(combo=self))
         self.view().pressed.connect(self.handle_item_pressed)
-        self.view().DELETE.connect(lambda x: self.DELETE.emit(x))
+        # self.view().DELETE.connect(lambda x: self.DELETE.emit(x))
         self.setModel(QStandardItemModel(self))
+        # self.setModel(CustomItemModel(self))
         self._changed = True
-        self.checkedItems = []
+        self._checkedItems = []
         self.setDuplicatesEnabled(False)
         self.setInsertPolicy(self.InsertAtTop)
         self._selection_is_present = ''
         self._selection_is_not_present = ''
         self._no_columns = 'No colums'
         self.map_cat_id = {}
+
+
+    @property
+    def checkedItems(self):
+        return self._checkedItems
+
+    @checkedItems.setter
+    def checkedItems(self, checkedItems:list):
+        if self._checkedItems != checkedItems:
+            self._checkedItems = checkedItems
+            self.CHECKED_ITEMS_READY.emit(checkedItems)
 
 
     @pyqtProperty(str)
@@ -172,7 +171,7 @@ class CheckableComboBox_ABS(QComboBox):
             super(CheckableComboBox_ABS, self).hidePopup()
             self.check_items()
             # self.CHECKED_ITEMS_READY.emit([item.text() for item in self.checkedItems])
-            self.CHECKED_ITEMS_READY.emit(self.checkedItems)
+            # self.CHECKED_ITEMS_READY.emit(self.checkedItems)
         self._changed = False
 
     def closeEvent(self, a0: QCloseEvent) -> None:
@@ -212,11 +211,11 @@ class CheckableComboBox_ABS(QComboBox):
     # method called by check_items
     def item_checked(self, index):
         item = self.model().item(index, 0)
-        item_data = self.findData(self.placeholders_id_code)
-        if item_data == -1:
+        if not isinstance(item.data(Qt.UserRole), PlaceholderIdCode):
             state = item.checkState()
             return state
         else:
+            item.setCheckable(False)
             return False
 
     def get_item_from_str(self, label):
@@ -268,20 +267,20 @@ class CheckableComboBox_ABS(QComboBox):
     def addItem(self, text: str, data=None) -> None:
         if data is None:
             data = text
-        if self._placeholder_is_inserted: # nel caso iniziale in cui sono presettatti degli items
-            super(CheckableComboBox_ABS, self).addItem(text, data)
-            self.update_placeholder()
+        super(CheckableComboBox_ABS, self).addItem(text, data)
+        row = self.count() - 1 if self.count() - 1 >= 0 else 0
+        item = self.model().item(row, 0)
+        item.setCheckable(True)
+        self.update_placeholder()
 
     def addItems(self, items_text, already_selected) -> None:
         self.clear()
-        # already_selected = [tag.category_obj.name for tag in already_selected]
-
         for item_text in items_text:
             if isinstance(item_text, str):
-                data = items_text
+                data = item_text
             else:
                 item_text, data = item_text.name, item_text
-            super(CheckableComboBox_ABS, self).addItem(item_text, data)
+            self.addItem(item_text, data)
         rows = self.count()
         for row in range(rows):
             item = self.model().item(row, 0)
@@ -308,11 +307,9 @@ class CheckableComboBox(CheckableComboBox_ABS):
         #test
         # items = [f'test {x} ' for x in range(9)]
         # already_selected = list(filter(lambda x: items.index(x) % 2 == 0, items))
+        # already_selected = list()
         # self.addItems(items, already_selected)
         #end test
-
-
-
 
 
 
