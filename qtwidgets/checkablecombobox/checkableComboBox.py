@@ -198,9 +198,6 @@ class CheckableComboBox_ABS(QComboBox):
         item.setCheckState(state)
         # calling method
         self.check_items()
-        if self.checkedItems and not state:
-                last_checked = self.checkedItems[-1]
-                # self.setCurrentIndex(last_checked.index().row())
         self._changed = True
 
     def unselect_all(self):
