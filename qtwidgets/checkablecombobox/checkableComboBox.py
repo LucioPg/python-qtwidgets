@@ -63,7 +63,7 @@ class ComboListView(QListView):
 
 # creating checkable combo box class
 class CheckableComboBox_ABS(QComboBox):
-    CHECKED_ITEMS_READY = pyqtSignal(list)
+    CHECKED_ITEMS_READY = pyqtSignal(dict)
     DELETE = pyqtSignal(int)
 
     def __init__(self, parent):
@@ -74,16 +74,14 @@ class CheckableComboBox_ABS(QComboBox):
         # except Exception as error:
         #     print(f'Warning the debugger in not loaded:: {error}')
         super(CheckableComboBox_ABS, self).__init__(parent)
-        # self.view().mousePressEvent.connect(self.handle_item_pressed)
         self.list_view = ComboListView
         self.placeholders_id_code = PlaceholderIdCode()
         self.setView(self.list_view(combo=self))
         self.view().pressed.connect(self.handle_item_pressed)
         # self.view().DELETE.connect(lambda x: self.DELETE.emit(x))
         self.setModel(QStandardItemModel(self))
-        # self.setModel(CustomItemModel(self))
         self._changed = True
-        self._checkedItems = []
+        self._checkedItems = {}
         self.setDuplicatesEnabled(False)
         self.setInsertPolicy(self.InsertAtTop)
         self._selection_is_present = ''
@@ -91,17 +89,14 @@ class CheckableComboBox_ABS(QComboBox):
         self._no_columns = 'No colums'
         self.map_cat_id = {}
 
-
     @property
     def checkedItems(self):
         return self._checkedItems
 
     @checkedItems.setter
-    def checkedItems(self, checkedItems:list):
+    def checkedItems(self, checkedItems:dict):
         if self._checkedItems != checkedItems:
             self._checkedItems = checkedItems
-            self.CHECKED_ITEMS_READY.emit(checkedItems)
-
 
     @pyqtProperty(str)
     def selection_is_present(self):
@@ -120,19 +115,17 @@ class CheckableComboBox_ABS(QComboBox):
     def no_available_field_text(self, value):
         self._no_columns = value
 
-
     @pyqtProperty(str)
     def selection_is_not_present(self):
         return self._selection_is_not_present
 
     @selection_is_not_present.setter
     def selection_is_not_present(self, value):
-
         self._selection_is_not_present = value
         self.insert_placeholder()
 
     def get_all_checked(self):
-        return self.checkedItems
+        return {text: value for text, value in self.checkedItems.items() if value == True}
 
     def mouseDoubleClickEvent(self, a0: QMouseEvent) -> None:
         pass
@@ -141,7 +134,7 @@ class CheckableComboBox_ABS(QComboBox):
         if not self._placeholder_is_inserted():
             if not self.count():
                 placeholder = self._no_columns
-            elif not self.checkedItems:
+            elif not all(self.checkedItems.values()):
                 placeholder = self._selection_is_not_present
             else:
                 placeholder = self._selection_is_present
@@ -173,8 +166,6 @@ class CheckableComboBox_ABS(QComboBox):
             self.insert_placeholder()
             super(CheckableComboBox_ABS, self).hidePopup()
             self.check_items()
-            # self.CHECKED_ITEMS_READY.emit([item.text() for item in self.checkedItems])
-            # self.CHECKED_ITEMS_READY.emit(self.checkedItems)
         self._changed = False
 
     def closeEvent(self, a0: QCloseEvent) -> None:
@@ -202,18 +193,15 @@ class CheckableComboBox_ABS(QComboBox):
         self.check_items()
         self._changed = True
 
-    def unselect_all(self):
-        checked_items_num = len(self.checkedItems)
-        for x in range(checked_items_num):
-            item = self.checkedItems.pop()
-            item.setCheckState(False)
+    # def unselect_all(self):
+    #     for item in self.checkedItems.keys():
+    #         item.setCheckState(False)
 
     def get_checked_items(self):
         return self.check_items()
 
     # method called by check_items
-    def item_checked(self, index):
-        item = self.model().item(index, 0)
+    def item_checked(self, item):
         if not isinstance(item.data(Qt.UserRole), PlaceholderIdCode):
             state = item.checkState()
             return state
@@ -244,27 +232,18 @@ class CheckableComboBox_ABS(QComboBox):
                 _str_list.append(element)
         return _str_list
 
-    def set_checked_items(self, checked:list):
-        checked = self.convert_str_list_to_items(checked)
-        self.checkedItems.clear()
-        for i in range(self.count()):
-            item = self.model().item(i, 0)
-            if item in checked:
-                checked.pop()
-                item.setCheckState(True)
-                self.checkedItems.append(item)
-            else:
-                item.setCheckState(False)
-
     # calling method
     def check_items(self):
         # blank list
-        self.checkedItems.clear()
+        # self.checkedItems.clear()
+
         # traversing the items
         for i in range(self.count()):
             # if item is checked add it to the list
-            if self.item_checked(i):
-                self.checkedItems.append(self.model().item(i, 0))
+            item = self.model().item(i, 0)
+            is_checked = True if self.item_checked(item) else False
+            self.checkedItems[item.text()] = is_checked
+        self.CHECKED_ITEMS_READY.emit(self.checkedItems)
         return self.checkedItems
 
     def addItem(self, text: str, data=None) -> None:
